@@ -1,0 +1,111 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.github.Btoke",
+    "module": "J",
+    "version": "0.0.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.5"
+    }
+  },
+  "variants": [
+    {
+      "name": "debugVariantDebugApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "J-0.0.1.aar",
+          "url": "J-0.0.1.aar",
+          "size": 39263,
+          "sha512": "0fd7e1564ee57ecc0e0c03de1415d3dae842882032a9c710f2202d5040c496341a11f0d85bdf4378950cd336ae242c7581fff5a729a5e81c1eaeed97dfbe4f3b",
+          "sha256": "935512bd6dd44a759fc2737a6111bd6410fe8d9d60df969f47b87e53274e7e2f",
+          "sha1": "875da1279eb126aa57c4f931a34c2832aafae6be",
+          "md5": "09bcfa67db129937093bef3c45f71903"
+        }
+      ]
+    },
+    {
+      "name": "debugVariantDebugRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.21"
+          }
+        },
+        {
+          "group": "androidx.core",
+          "module": "core-ktx",
+          "version": {
+            "requires": "1.7.0"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "okhttp",
+          "version": {
+            "requires": "4.9.0"
+          }
+        },
+        {
+          "group": "com.squareup.okhttp3",
+          "module": "logging-interceptor",
+          "version": {
+            "requires": "4.9.0"
+          }
+        },
+        {
+          "group": "com.google.code.gson",
+          "module": "gson",
+          "version": {
+            "requires": "2.8.5"
+          }
+        },
+        {
+          "group": "top.canyie.pine",
+          "module": "core",
+          "version": {
+            "requires": "0.2.6"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "J-0.0.1.aar",
+          "url": "J-0.0.1.aar",
+          "size": 39263,
+          "sha512": "0fd7e1564ee57ecc0e0c03de1415d3dae842882032a9c710f2202d5040c496341a11f0d85bdf4378950cd336ae242c7581fff5a729a5e81c1eaeed97dfbe4f3b",
+          "sha256": "935512bd6dd44a759fc2737a6111bd6410fe8d9d60df969f47b87e53274e7e2f",
+          "sha1": "875da1279eb126aa57c4f931a34c2832aafae6be",
+          "md5": "09bcfa67db129937093bef3c45f71903"
+        }
+      ]
+    }
+  ]
+}
