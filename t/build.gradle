@@ -57,7 +57,7 @@ afterEvaluate {
             // 这里的debug名字是自己起的
             debug(MavenPublication) {
                 groupId = 'com.github.Btoke'
-                artifactId = 'J'
+                artifactId = 'Encrypt'
                 version = aarVersion
                 // 这里除了有debug 还有release
                 from components.debug

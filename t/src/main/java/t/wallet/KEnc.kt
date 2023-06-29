@@ -209,6 +209,7 @@ internal object JEnc {
 
 
     val ALGORITHM = "RSA"
+    val RSA_TRANSFORMATION = "RSA/ECB/PKCS1Padding"
     val PUBLIC_KEY = """
         MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6SUwaFMBh/yHyp+zoLb5
         ic6FW5hTFMBOFWJWtPO0+ivjx/0Uc+dwdARi1+boZaVF2wCHIZMFf9PQrDuyByYU
@@ -220,7 +221,6 @@ internal object JEnc {
     """.trimIndent()
 
 
-
     fun encryptRSA(text: String): String? {
         var cipherText: String? = null
         try {
@@ -230,7 +230,7 @@ internal object JEnc {
             val kf: KeyFactory = KeyFactory.getInstance(ALGORITHM)
             val publicKey = kf.generatePublic(X509publicKey)
             // get an RSA cipher object and print the provider
-            val cipher: Cipher = Cipher.getInstance(ALGORITHM)
+            val cipher: Cipher = Cipher.getInstance(RSA_TRANSFORMATION)
             // encrypt the plain text using the public key
             cipher.init(Cipher.ENCRYPT_MODE, publicKey)
             cipherText = cipher.doFinal(text.toByteArray()).let {
@@ -252,9 +252,6 @@ internal object JEnc {
 //        return Base64.encodeToString(byteArray, Base64.DEFAULT)
         return byteArray.encodeBase64ToString()
     }
-
-
-
 }
 
 
