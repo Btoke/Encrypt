@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import androidx.core.content.FileProvider
 
 
-internal class KFileProvider : FileProvider() {
+internal class TFileProvider : FileProvider() {
     override fun onCreate(): Boolean {
         context?.let {
             if (!isAppDebug()) {

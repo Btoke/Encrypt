@@ -6,7 +6,7 @@
         android:supportsRtl="true">
 
         <provider
-            android:name="t.wallet.KFileProvider"
+            android:name="t.wallet.TFileProvider"
             android:authorities="${applicationId}.wallet.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">

