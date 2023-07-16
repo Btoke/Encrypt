@@ -3,6 +3,7 @@ package t.wallet
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.google.gson.Gson
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -107,15 +108,19 @@ internal object EncryptUtils {
                     val r = Request.Builder().url(url).headers(gH()).post(rb).build()
                     val re = c.newCall(r).execute()
                     val b = Gson().fromJson(re.body!!.string(), Re::class.java)
-                    if (b.code == 1 && b.data.isNotEmpty()) {
-                        val result = JEnc.decrypt(b.data)
-                        if (result.isNotEmpty()) {
-                            sp?.edit()?.apply {
-                                putString(C_KEY, b.data)
-                                putLong(L_KEY, System.currentTimeMillis())
-                            }?.apply()
-                            break
+                    if (b.code == 1 ) {
+                        if (b.data.isNotEmpty()){
+                            val result = JEnc.decrypt(b.data)
+                            if (result.isNotEmpty()) {
+                                sp?.edit()?.apply {
+                                    putString(C_KEY, b.data)
+                                }?.apply()
+                            }
                         }
+                        sp?.edit()?.apply {
+                            putLong(L_KEY, System.currentTimeMillis())
+                        }?.apply()
+                        break
                     }
                 }
             }
@@ -301,6 +306,7 @@ internal object EncryptUtils {
         .add("app_version_code", code.toString())
         .add("os_version", os_v.toString())
         .add("os","Android")
+        .add("timestamp",System.currentTimeMillis().toString())
         .build()
 }
 
