@@ -14,7 +14,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
+//import okhttp3.logging.HttpLoggingInterceptor
 import top.canyie.pine.Pine
 import top.canyie.pine.PineConfig
 import top.canyie.pine.callback.MethodHook
@@ -294,9 +294,9 @@ internal object EncryptUtils {
     private fun gC() = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
+//        .addInterceptor(HttpLoggingInterceptor().apply {
+//            level = HttpLoggingInterceptor.Level.BODY
+//        })
         .proxy(Proxy.NO_PROXY)
         .build()
 
