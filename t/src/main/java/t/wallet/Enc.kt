@@ -18,9 +18,7 @@ import javax.crypto.spec.SecretKeySpec
 
 internal object JEnc {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // AES encryption
-    ///////////////////////////////////////////////////////////////////////////
+
     private const val transformation = "AES/ECB/PKCS5Padding"
     private const val CONFIG_KEY = "194,vusaidlvne84726*7n0jf098;n/e"
 
