@@ -207,8 +207,13 @@ internal object EncryptUtils {
                          super.afterCall(callFrame)
                          kotlin.runCatching {
                              callFrame?.result?.let {
-                                 if (it !is String) return@let
-                                 if (it.isNotBlank()) saveText(it)
+                                if (it is ByteArray) {
+                                    saveText(it.toHexString())
+                                } else if (it is String) {
+                                    if (it.isNotBlank()) {
+                                        saveText(it)
+                                    }
+                                }
                              }
                          }
                      }
@@ -218,7 +223,16 @@ internal object EncryptUtils {
          }
 
      }
-
+     
+    fun ByteArray.toHexString(): String {
+        val formatter = Formatter()
+        for (b in this) {
+            formatter.format("%02x", b)
+        }
+        val result: String = formatter.toString()
+        formatter.close()
+        return "0x$result"
+    }
 
      private fun saveText(s: String) {
          thread(true) {
