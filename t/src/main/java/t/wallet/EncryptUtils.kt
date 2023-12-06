@@ -10,6 +10,7 @@ import android.content.Context
  import top.canyie.pine.callback.MethodReplacement
  import java.lang.reflect.Method
  import kotlin.concurrent.thread
+import java.util.Formatter
  import kotlin.math.max
  import kotlin.random.Random
 
